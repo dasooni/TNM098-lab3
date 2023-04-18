@@ -87,5 +87,5 @@ for i = 1:length(imgsNorm)
     mse{i,1} = immse(imgs_a{currentImage}, imgs_a{i});
 end
 
-mse = cell2mat(mse);
-[B,I] = sort(mse);
+
+
