@@ -9,7 +9,7 @@ for i = 1:length(imgs)
     imgsNorm{i,1} = im2double(imgs{i});  
 end
 
-%Select current image, to be changed into UI drop-down menu.
+%Select current image, 1-12
 currentImage = 1;
 
 %Resize images. Makes sense later.
