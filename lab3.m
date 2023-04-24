@@ -1,4 +1,6 @@
 clear;
+%Select current image, 1-12
+currentImage = 1;
 
 imds = imageDatastore("Lab3.1\*.jpg");
 imgs = readall(imds);
@@ -9,8 +11,7 @@ for i = 1:length(imgs)
     imgsNorm{i,1} = im2double(imgs{i});  
 end
 
-%Select current image, 1-12
-currentImage = 1;
+
 
 %Resize images. Makes sense later.
 %Get minimum size (mxn) from the folder of images.
@@ -63,10 +64,29 @@ title("Subplot 4: Gray channel histogram")
 %% Histogram displays the distrubtion. This shows distrubition for each band.
 plot(x, yRed, 'Red', x, yGreen, 'Green', x, yBlue, 'Blue');
 
-%% Edge detection
-bw1 = edge(imgs_a{currentImage}, "canny");
-imshow(bw1)
-title('Canny filtered image')
+%% Deltas
+
+for j = 1:length(imgsNorm)
+    deltaR{j,1} = abs(imgs_r{currentImage,1} - imgs_r{j,1});
+    deltaG{j,1} = abs(imgs_g{currentImage,1} - imgs_g{j,1});
+    deltaB{j,1} = abs(imgs_b{currentImage,1} - imgs_b{j,1});
+
+    meanR{j,1} = mean2(deltaR{j,1}); 
+    meanG{j,1} = mean2(deltaG{j,1}); 
+    meanB{j,1} = mean2(deltaB{j,1});
+end
+
+
+
+%% SSIm
+for n = 1:length(imgsNorm)
+    [ssimvals{n,1}, ssimmaps{n,1}] = ssim(imgs_a{currentImage,1}, imgs_a{n,1});
+end
+
+ssimvals = cell2mat(ssimvals);
+[BS,IS] = sort(ssimvals, 'descend');
+
+montage({ssimmaps{currentImage}, ssimmaps{IS(2)}})
 
 %% Cross correlation
 % Rather slow. 
@@ -89,3 +109,29 @@ end
 
 mse = cell2mat(mse);
 [B,I] = sort(mse);
+
+
+%% Feature matching using Harris & SURF
+points = cell(size(imgsNorm,1),1);
+for j = 1:length(imgsNorm)
+    points{j,1} = detectHarrisFeatures(imgs_a{j});
+    points2{j,1} = detectSURFFeatures(imgs_a{j});
+    [features{j,1}, val_points{j,1}] = extractFeatures(imgs_a{j,1}, points{j,1});
+    [features2{j,1}, val_points2{j,1}] = extractFeatures(imgs_a{j,1}, points2{j,1});
+    
+    
+end
+
+indexPairs = matchFeatures(features{1,1}, features{9,1});
+indexPairs2 = matchFeatures(features2{1,1}, features2{9,1});
+
+matchedPoints1 = val_points{1,1}(indexPairs(:,1),:);
+matchedPoints2 = val_points{2,1}(indexPairs(:,2),:);
+
+matchedPointsSurf1 = val_points2{1,1}(indexPairs2(:,1));
+matchedPointsSurf2 = val_points2{2,1}(indexPairs2(:,2));
+
+showMatchedFeatures(imgs{1,1}, imgs{9,1}, matchedPointsSurf1,matchedPointsSurf1);
+
+%%
+
